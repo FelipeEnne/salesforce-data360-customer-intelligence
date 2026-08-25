@@ -67,7 +67,6 @@ def format_phone(phone: str) -> str:
     into:
         (11) 98765-4321
     """
-
     digits = phone.replace("+55", "")
 
     ddd = digits[:2]
@@ -128,20 +127,26 @@ def transform_customer(row):
     sf_email = email
     sf_phone = phone
 
-    # 0-59 → clean record (60%)
-    if bucket < 60:
-        pass
+    quality_profile = "clean"
 
-    # 60-69 → uppercase email (10%)
+    # 0-59 -> clean record (60%)
+    if bucket < 60:
+        quality_profile = "clean"
+
+    # 60-69 -> uppercase email (10%)
     elif bucket < 70:
+        quality_profile = "uppercase_email"
         sf_email = email.upper()
 
-    # 70-79 → differently formatted phone (10%)
+    # 70-79 -> differently formatted phone (10%)
     elif bucket < 80:
+        quality_profile = "formatted_phone"
         sf_phone = format_phone(phone)
 
-    # 80-87 → abbreviated name (8%)
+    # 80-87 -> abbreviated name (8%)
     elif bucket < 88:
+        quality_profile = "abbreviated_name"
+
         (
             sf_first_name,
             sf_last_name,
@@ -151,16 +156,20 @@ def transform_customer(row):
             last_name,
         )
 
-    # 88-92 → missing email (5%)
+    # 88-92 -> missing email (5%)
     elif bucket < 93:
+        quality_profile = "missing_email"
         sf_email = None
 
-    # 93-96 → missing phone (4%)
+    # 93-96 -> missing phone (4%)
     elif bucket < 97:
+        quality_profile = "missing_phone"
         sf_phone = None
 
-    # 97-99 → small name typo (3%)
+    # 97-99 -> small name typo (3%)
     else:
+        quality_profile = "name_typo"
+
         (
             sf_first_name,
             sf_last_name,
@@ -196,6 +205,7 @@ def transform_customer(row):
         sf_phone,
         lead_source,
         contact_status,
+        quality_profile,
     )
 
 
@@ -236,11 +246,12 @@ def main():
                     email,
                     phone,
                     lead_source,
-                    contact_status
+                    contact_status,
+                    quality_profile
                 )
                 VALUES (
                     %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s
+                    %s, %s, %s, %s, %s
                 )
                 ON CONFLICT (salesforce_contact_id)
                 DO UPDATE SET
@@ -259,7 +270,9 @@ def main():
                     lead_source =
                         EXCLUDED.lead_source,
                     contact_status =
-                        EXCLUDED.contact_status
+                        EXCLUDED.contact_status,
+                    quality_profile =
+                        EXCLUDED.quality_profile
             """, contacts)
 
     print(

@@ -21,7 +21,6 @@ IMPORT_FILE = OUTPUT_DIR / "contacts_import.csv"
 GROUND_TRUTH_FILE = OUTPUT_DIR / "contacts_ground_truth.csv"
 
 
-# Distribuição planejada para exatamente 1.000 contatos.
 QUOTAS = {
     "clean": 600,
     "uppercase_email": 100,
@@ -83,10 +82,17 @@ def fetch_contacts(cursor):
 
 
 def write_import_file(contacts):
+    """
+    CSV usado pelo Salesforce Data Import Wizard.
+
+    utf-8-sig adiciona o BOM UTF-8 para o Salesforce
+    reconhecer corretamente caracteres como:
+    Antônio, Bárbara, João, etc.
+    """
     with IMPORT_FILE.open(
         "w",
         newline="",
-        encoding="utf-8",
+        encoding="utf-8-sig",
     ) as file:
         writer = csv.writer(file)
 
@@ -119,8 +125,8 @@ def write_import_file(contacts):
                     customer_id,
                     first_name,
                     last_name,
-                    email,
-                    phone,
+                    email or "",
+                    phone or "",
                     lead_source,
                     contact_status,
                 ]
@@ -128,6 +134,11 @@ def write_import_file(contacts):
 
 
 def write_ground_truth_file(contacts):
+    """
+    Arquivo interno para avaliação.
+
+    Não deve ser importado no Salesforce.
+    """
     with GROUND_TRUTH_FILE.open(
         "w",
         newline="",
@@ -161,8 +172,9 @@ def main():
         with conn.cursor() as cursor:
             contacts = fetch_contacts(cursor)
 
-    # Ordem determinística final
-    contacts.sort(key=lambda row: row[0])
+    contacts.sort(
+        key=lambda row: row[0]
+    )
 
     write_import_file(contacts)
     write_ground_truth_file(contacts)

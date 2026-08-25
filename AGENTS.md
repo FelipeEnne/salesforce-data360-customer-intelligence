@@ -1,7 +1,60 @@
-# Security rules
+# AGENTS.md
 
-- Never read, open, print, cat, grep, parse, copy, or modify `.env`.
-- Never expose secrets, passwords, tokens, API keys, or credentials.
-- Use `.env.example` only to understand environment variables.
-- Do not modify files containing credentials.
-- If a task requires a value from `.env`, ask the user instead.
+## Project Overview
+
+This repository contains a Customer 360 / Customer Intelligence MVP built with:
+
+- Python
+- PostgreSQL
+- Docker
+- Salesforce CRM
+- Salesforce Data Cloud / Data 360
+
+The main goal is to demonstrate an end-to-end customer data pipeline including:
+
+1. Source data ingestion
+2. Customer master generation
+3. Synthetic CRM/support/marketing data
+4. Data quality validation
+5. Salesforce CRM integration
+6. Salesforce Data Cloud ingestion
+7. Identity Resolution
+8. Customer profile unification
+9. Customer analytics and segmentation
+
+Keep the project focused on Data Engineering, Salesforce Data Cloud, and Customer 360.
+
+Do not turn this repository into a generic Full Stack application.
+
+---
+
+## Security Rules
+
+### Secrets
+
+Never read, display, inspect, print, parse, search, copy, modify, or expose:
+
+- `.env`
+- `.env.local`
+- `.env.production`
+- `.env.development`
+- credential files
+- API tokens
+- passwords
+- Salesforce credentials
+- SSH private keys
+- `.pem` files
+- access tokens
+- refresh tokens
+- authentication cookies
+
+Do not run commands such as:
+
+```bash
+cat .env
+less .env
+head .env
+tail .env
+grep . .env
+sed ... .env
+awk ... .env

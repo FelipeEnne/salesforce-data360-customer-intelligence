@@ -79,14 +79,19 @@ EXPORTS = {
 
     "marketing_interactions.csv": """
         SELECT
-            interaction_id,
-            email,
-            campaign_name,
-            event_type,
-            channel,
-            event_at
-        FROM marketing.interactions
-        ORDER BY interaction_id
+            m.interaction_id,
+            cm.customer_unique_id
+                AS master_customer_id,
+            m.email,
+            m.campaign_name,
+            m.event_type,
+            m.channel,
+            m.event_at
+        FROM marketing.interactions m
+        JOIN crm.customer_master cm
+            ON cm.customer_unique_id =
+               m.customer_unique_id
+        ORDER BY m.interaction_id
     """,
 
     "web_events.csv": """

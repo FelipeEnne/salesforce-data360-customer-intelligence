@@ -1,5 +1,7 @@
 # Customer 360 with Salesforce Data Cloud
 
+[![CI](https://github.com/FelipeEnne/salesforce-data360-customer-intelligence/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/FelipeEnne/salesforce-data360-customer-intelligence/actions/workflows/ci.yml)
+
 Customer 360 MVP for preparing and matching fragmented customer records across commerce, CRM, support, marketing, and web sources.
 
 The project builds a reproducible local data pipeline from the public Olist dataset, adds deterministic synthetic identities and cross-channel activity, and exports independent sources for Salesforce CRM and Salesforce Data Cloud.
@@ -34,6 +36,7 @@ The pipeline downloads and loads Olist data, generates deterministic customer id
 - Python, psycopg, Faker, and Kaggle Hub
 - PostgreSQL 17 and SQL
 - Docker Compose
+- GitHub Actions and Python unittest
 - Salesforce CRM
 - Salesforce Data Cloud
 

@@ -77,7 +77,15 @@ Generated files are written below `data/processed`:
 - `data360/*.csv`: source files for Data Cloud ingestion;
 - `evaluation/identity_ground_truth.csv`: expected cross-source relationships.
 
-## 7. Stop PostgreSQL
+## 7. Run unit tests
+
+The unit tests cover deterministic identity generation, source-specific transformations, web identity states, and Identity Resolution evaluation logic. They do not require PostgreSQL or Salesforce.
+
+```bash
+PYTHON_DOTENV_DISABLED=1 python -m unittest discover -s tests -v
+```
+
+## 8. Stop PostgreSQL
 
 ```bash
 docker compose down

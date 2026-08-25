@@ -4,7 +4,7 @@ Customer 360 MVP for preparing and matching fragmented customer records across c
 
 The project builds a reproducible local data pipeline from the public Olist dataset, adds deterministic synthetic identities and cross-channel activity, and exports independent sources for Salesforce CRM and Salesforce Data Cloud.
 
-> The local pipeline, validation queries, and CSV exports are implemented. Salesforce CRM import and Data Cloud configuration are manual external steps. Identity Resolution metrics have not yet been measured.
+> The local pipeline and Data Cloud MVP are implemented. Customer Master and Salesforce CRM Contacts have been ingested, and Identity Resolution has run successfully. Quantitative accuracy metrics have not yet been calculated.
 
 ## The problem
 
@@ -16,18 +16,18 @@ The same customer can appear differently in each system: an uppercase email addr
 flowchart LR
     O[Olist] -->|Python| P[(PostgreSQL 17)]
     P --> CM[Customer Master]
-    CM --> S[CRM, Support, Marketing, Web]
-    S --> E[CSV exports]
-    E -. manual ingestion .-> CRM[Salesforce CRM]
-    E -. manual ingestion .-> DC[Salesforce Data Cloud]
-    CRM -. data stream .-> DC
+    CM --> CSV[Customer Master CSV]
+    CM --> L[Local Support, Marketing, Web]
+    CSV --> DC[Salesforce Data Cloud]
+    CM --> CRM[1,000 Salesforce CRM Contacts]
+    CRM -->|Native Data Stream| DC
     DC --> IR[Identity Resolution]
     IR --> UP[Unified Profiles]
 ```
 
-The pipeline downloads and loads Olist data, generates deterministic customer identities and source-specific quality variations, validates the datasets with SQL, and creates separate CRM, Data Cloud, and evaluation exports.
+The pipeline downloads and loads Olist data, generates deterministic customer identities and source-specific quality variations, validates the datasets with SQL, and creates separate CRM, Data Cloud, and evaluation exports. The current Data Cloud implementation includes Customer Master and Salesforce CRM Contacts; the other generated sources remain local.
 
-[Architecture and Identity Resolution details](docs/architecture.md)
+[Data Cloud setup](docs/data-cloud-setup.md) · [Field mappings](docs/field-mapping.md) · [Identity Resolution](docs/identity-resolution.md)
 
 ## Technology stack
 
@@ -39,22 +39,22 @@ The pipeline downloads and loads Olist data, generates deterministic customer id
 
 ## Data sources
 
-| Source | Purpose | Identity signals |
+| Source | Purpose | Data Cloud status |
 | --- | --- | --- |
-| Olist | Public commerce transactions | Customer and order identifiers |
-| Customer Master | Synthetic reference identity | Name, email, E.164 phone, birth date |
-| Salesforce Contacts | CRM-style contact records | Salesforce-like ID, name, email, phone |
-| Support | Simulated service tickets | Requester name, email, phone |
-| Marketing | Simulated campaign engagement | Email and campaign activity |
-| Web Events | Anonymous-to-known journeys | Anonymous ID, session ID, email |
+| Olist | Public commerce transactions | Local source only |
+| Customer Master | Synthetic reference identity | Loaded: 96,096 profiles |
+| Salesforce Contacts | CRM-style contact records | Loaded: 1,000 Contacts |
+| Support | Simulated service tickets | Not loaded |
+| Marketing | Simulated campaign engagement | Not loaded |
+| Web Events | Anonymous-to-known journeys | Not loaded |
 
 [Data source and quality-profile details](docs/data-sources.md)
 
 ## Identity Resolution
 
-The local pipeline retains `customer_unique_id` as evaluation ground truth but omits it from several operational exports. In Data Cloud, the intended approach is to map each source to the data model, normalize identity fields, apply exact or fuzzy match rules, reconcile preferred attributes, and compare the unified relationships with the ground-truth export.
+The `Customer 360 MVP` ruleset (`mvp1`) uses Individual as its primary DMO. Two independent rules joined by `OR` match Exact Normalized Email or Exact Normalized E.164 Phone. Name is excluded because the dataset contains intentional name variations, and `External_Customer_Id__c` is excluded so it remains independent evaluation ground truth.
 
-Data Cloud rules and metadata are not automated or versioned in this repository yet.
+Individual Id reconciliation uses Source Priority, with Customer Master ahead of `Contact_Home`, and ignores empty values. The ruleset has executed successfully; its configuration is documented, but its metadata is not deployed automatically by this repository.
 
 ## MVP results
 
@@ -72,6 +72,8 @@ A representative local run produced:
 | Products | 32,951 |
 
 These are pipeline output counts, not measured Data Cloud unification results.
+
+The current Data Cloud run reports approximately 97.12K source profiles, 96.17K unified known profiles, a 1% consolidation rate, and no anonymous unified profiles. Precision and recall will be evaluated separately against ground truth.
 
 ## Run locally
 

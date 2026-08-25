@@ -114,3 +114,7 @@ Replace the password placeholder in `.env` before starting the pipeline. Use `ma
 ## Dataset attribution
 
 The transactional source is the public **Brazilian E-Commerce Public Dataset by Olist**, obtained through Kaggle Hub (`olistbr/brazilian-ecommerce`). Source data is intentionally not versioned in this repository.
+
+## License
+
+The project code and documentation are available under the [MIT License](LICENSE). The license does not replace or modify the terms applicable to the Olist dataset or third-party services.

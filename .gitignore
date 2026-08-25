@@ -1,8 +1,35 @@
-.venv/
+# Local environments and secrets
 .env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+
+# Python artifacts and tooling
 __pycache__/
 *.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
+# Logs, database dumps, and temporary files
+*.log
+*.sql.gz
+*.dump
+*.bak
+*.tmp
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Downloaded and generated datasets
 data/raw/*
 !data/raw/.gitkeep
 

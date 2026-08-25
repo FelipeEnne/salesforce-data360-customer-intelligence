@@ -56,20 +56,25 @@ EXPORTS = {
 
     "support_tickets.csv": """
         SELECT
-            ticket_id,
-            requester_name,
-            requester_email,
-            requester_phone,
-            category,
-            priority,
-            status,
-            channel,
-            sentiment,
-            created_at,
-            resolved_at,
-            resolution_hours
-        FROM support.tickets
-        ORDER BY ticket_id
+            t.ticket_id,
+            cm.customer_unique_id
+                AS master_customer_id,
+            t.requester_name,
+            t.requester_email,
+            t.requester_phone,
+            t.category,
+            t.priority,
+            t.status,
+            t.channel,
+            t.sentiment,
+            t.created_at,
+            t.resolved_at,
+            t.resolution_hours
+        FROM support.tickets t
+        JOIN crm.customer_master cm
+            ON cm.customer_unique_id =
+               t.customer_unique_id
+        ORDER BY t.ticket_id
     """,
 
     "marketing_interactions.csv": """

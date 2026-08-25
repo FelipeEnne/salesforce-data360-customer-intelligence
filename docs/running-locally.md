@@ -18,6 +18,8 @@ Run `make help` to list the available targets. The sections below show the equiv
 - Python 3.10 or newer
 - Access to the public Olist dataset through Kaggle Hub
 
+Direct Python dependencies are pinned in `requirements.txt` to the versions validated by this project. `pandas` is intentionally not included because the current pipeline does not import it.
+
 Kaggle Hub may require Kaggle credentials. Keep Kaggle and Salesforce credentials, tokens, local `.env` files, generated data, and database dumps out of Git.
 
 ## 1. Create the Python environment

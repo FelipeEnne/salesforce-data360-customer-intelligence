@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: data360-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: data360
+      POSTGRES_PASSWORD: data360_dev
+      POSTGRES_DB: customer360
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/schema:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U data360 -d customer360"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+

@@ -1,0 +1,5 @@
+kagglehub
+pandas
+psycopg[binary]
+python-dotenv
+faker

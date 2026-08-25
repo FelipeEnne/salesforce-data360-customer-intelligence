@@ -36,7 +36,7 @@ The pipeline downloads and loads Olist data, generates deterministic customer id
 - Python, psycopg, Faker, and Kaggle Hub
 - PostgreSQL 17 and SQL
 - Docker Compose
-- GitHub Actions and Python unittest
+- Ruff, GitHub Actions, and Python unittest
 - Salesforce CRM
 - Salesforce Data Cloud
 

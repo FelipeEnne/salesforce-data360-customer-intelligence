@@ -157,7 +157,7 @@ def main():
             for (
                 customer_id,
                 master_email,
-                first_purchase,
+                _first_purchase,
                 last_purchase,
             ) in customers:
 

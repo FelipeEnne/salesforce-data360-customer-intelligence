@@ -18,7 +18,7 @@ Run `make help` to list the available targets. The sections below show the equiv
 - Python 3.10 or newer
 - Access to the public Olist dataset through Kaggle Hub
 
-Direct Python dependencies are pinned in `requirements.txt` to the versions validated by this project. `pandas` is intentionally not included because the current pipeline does not import it.
+Direct Python dependencies are pinned in `requirements.txt`. Development tools are pinned separately in `requirements-dev.txt`. `pandas` is intentionally not included because the current pipeline does not import it.
 
 Kaggle Hub may require Kaggle credentials. Keep Kaggle and Salesforce credentials, tokens, local `.env` files, generated data, and database dumps out of Git.
 
@@ -130,6 +130,12 @@ Generated files are written below `data/processed`:
 - `evaluation/identity_ground_truth.csv`: expected cross-source relationships.
 
 ## 7. Run unit tests
+
+Run the Ruff linter before the tests:
+
+```bash
+make lint
+```
 
 The unit tests cover deterministic identity generation, source-specific transformations, web identity states, and Identity Resolution evaluation logic. They do not require PostgreSQL or Salesforce.
 

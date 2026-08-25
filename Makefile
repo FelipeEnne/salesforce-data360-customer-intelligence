@@ -6,14 +6,14 @@ SYSTEM_PYTHON ?= python3
 .DEFAULT_GOAL := help
 .NOTPARALLEL: pipeline
 
-.PHONY: help setup database status download load generate validate export test pipeline stop
+.PHONY: help setup database status download load generate validate export lint test pipeline stop
 
 help: ## Show the available commands
 	@awk 'BEGIN {FS = ":.*## "; print "Available commands:"} /^[a-zA-Z_-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 setup: .venv/bin/python ## Create the virtual environment and install dependencies
 	$(PYTHON) -m pip install --upgrade pip
-	$(PYTHON) -m pip install -r requirements.txt
+	$(PYTHON) -m pip install -r requirements-dev.txt
 
 .venv/bin/python:
 	$(SYSTEM_PYTHON) -m venv .venv
@@ -48,6 +48,9 @@ validate: ## Run all SQL data-quality checks
 export: ## Export Salesforce CRM, Data Cloud, and evaluation files
 	$(PYTHON) src/ingestion/export_salesforce_crm_sample.py
 	$(PYTHON) src/ingestion/export_data360.py
+
+lint: ## Run Ruff against source code and tests
+	$(PYTHON) -m ruff check src tests
 
 test: ## Run the unit test suite without loading the local .env
 	PYTHON_DOTENV_DISABLED=1 $(PYTHON) -m unittest discover -s tests -v

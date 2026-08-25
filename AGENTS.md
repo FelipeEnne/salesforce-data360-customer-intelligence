@@ -58,3 +58,17 @@ tail .env
 grep . .env
 sed ... .env
 awk ... .env
+```
+
+---
+
+## Validation Rules
+
+Whenever Python source code or tests are created, modified, or deleted, run both commands before considering the work complete:
+
+```bash
+make lint
+make test
+```
+
+Do not skip, suppress, or ignore failures. Fix lint and test errors before completing the task. Documentation-only changes do not require these commands unless they also modify validation tooling or CI configuration.

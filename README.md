@@ -75,6 +75,8 @@ These are pipeline output counts, not measured Data Cloud unification results.
 
 The current Data Cloud run reports approximately 97.12K source profiles, 96.17K unified known profiles, a 1% consolidation rate, and no anonymous unified profiles. Precision and recall will be evaluated separately against ground truth.
 
+The [quantitative evaluation workflow](docs/identity-evaluation.md) is ready and requires a detailed Unified Profile membership export from Data Cloud before metrics can be calculated.
+
 ## Run locally
 
 See [Local setup and pipeline commands](docs/running-locally.md).
@@ -94,7 +96,7 @@ See [Local setup and pipeline commands](docs/running-locally.md).
 ## Future improvements
 
 - Version Data Cloud mappings and Identity Resolution rules where supported.
-- Measure precision, recall, and match rate against the ground truth.
+- Export Unified Profile memberships and run the ground-truth evaluation.
 - Add automated tests, CI checks, dependency pinning, and orchestration.
 - Support incremental ingestion and near-real-time web events.
 - Add consent, retention, observability, and activation examples.

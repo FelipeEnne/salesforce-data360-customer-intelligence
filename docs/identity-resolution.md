@@ -58,7 +58,7 @@ These results confirm that the ruleset executed and produced unified profiles. T
 
 ## Evaluation boundary
 
-Precision, recall, false-positive counts, and false-negative counts have not yet been calculated. Quantitative evaluation against the exported ground truth is a separate next step.
+Precision, recall, false-positive counts, and false-negative counts have not yet been calculated. The [quantitative evaluation workflow](identity-evaluation.md) is implemented and awaits a detailed export of Unified Profile memberships from Data Cloud.
 
 The ruleset does not use `External_Customer_Id__c` for matching. This preserves that identifier for an independent comparison between expected and resolved relationships.
 
@@ -66,4 +66,5 @@ The ruleset does not use `External_Customer_Id__c` for matching. This preserves 
 
 - [Data Cloud setup](data-cloud-setup.md)
 - [Field mappings](field-mapping.md)
+- [Quantitative evaluation](identity-evaluation.md)
 - [Back to README](../README.md)

@@ -82,7 +82,13 @@ The [quantitative evaluation workflow](docs/identity-evaluation.md) is ready and
 
 ## Run locally
 
-See [Local setup and pipeline commands](docs/running-locally.md).
+```bash
+cp .env.example .env
+make setup
+make pipeline
+```
+
+Replace the password placeholder in `.env` before starting the pipeline. Use `make help` to list individual commands or see [Local setup and pipeline commands](docs/running-locally.md).
 
 ## Repository structure
 
@@ -93,7 +99,8 @@ See [Local setup and pipeline commands](docs/running-locally.md).
 ├── sql/schema/        # PostgreSQL schemas and tables
 ├── sql/analytics/     # Data-quality validation queries
 ├── src/generators/    # Deterministic source generation
-└── src/ingestion/     # Download, loading, and exports
+├── src/ingestion/     # Download, loading, and exports
+└── Makefile           # Local workflow commands
 ```
 
 ## Future improvements

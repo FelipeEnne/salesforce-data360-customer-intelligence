@@ -51,7 +51,7 @@ The pipeline downloads and loads Olist data, generates deterministic customer id
 | Marketing | Simulated campaign engagement | Not loaded |
 | Web Events | Anonymous-to-known journeys | Not loaded |
 
-[Data source and quality-profile details](docs/data-sources.md)
+[Data source details](docs/data-sources.md) · [Data dictionary](docs/data-dictionary.md)
 
 ## Identity Resolution
 

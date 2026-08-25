@@ -1,76 +1,119 @@
 # Customer 360 with Salesforce Data Cloud
 
-Customer 360 MVP that brings transactional, profile, and behavioral data together into an integrated customer view. The project uses Python, PostgreSQL, and Docker to prepare sources with different data quality levels, Salesforce CRM as a contact source, and Salesforce Data Cloud for **Identity Resolution**.
+This project is a Customer 360 MVP for testing how fragmented customer records can be prepared and matched across commerce, CRM, support, marketing, and web sources. It builds a reproducible local data pipeline and produces source files for Salesforce CRM and Salesforce Data Cloud.
 
-The lab starts with the public Brazilian E-Commerce dataset (Olist), enriches customers with synthetic identities, and creates simulated CRM, support, marketing, and web browsing signals. The final exports are CSV files designed to support the configuration of data streams and reconciliation rules in Data Cloud.
+> Scope: the local pipeline, synthetic source generation, validation queries, and CSV exports are implemented in this repository. Salesforce CRM import and Data Cloud configuration are external, manual steps. No Data Cloud metadata or measured Identity Resolution results are versioned here yet.
 
-> This is an educational demonstration project. Names, email addresses, phone numbers, and other enriched attributes are synthetic. Generated files must not be treated as production data.
+## At a glance
+
+| Area | Summary |
+| --- | --- |
+| Problem | Customer identity is split across systems and represented with inconsistent names, email addresses, phone formats, missing values, and anonymous web identifiers. |
+| Approach | Build a trusted Customer Master, generate controlled source variations, retain evaluation ground truth, and export each source independently for matching in Data Cloud. |
+| Stack | Python, PostgreSQL 17, Docker Compose, SQL, psycopg, Faker, Kaggle Hub, Salesforce CRM, and Salesforce Data Cloud. |
+| Data | Public Olist commerce data plus synthetic Customer Master, Salesforce Contacts, Support, Marketing, and Web Events. |
+| Current output | 96,096 master customers, 96,096 CRM-style contacts, 58,020 support tickets, 112,914 marketing interactions, and 177,982 web events in a representative local run. |
+
+Names, email addresses, phone numbers, and other enriched identity attributes are synthetic. Generated files are demonstration data, not production data.
+
+## Problem
+
+A single customer can appear differently in each operational system: an uppercase email address in CRM, a formatted phone number in support, a missing identifier in marketing, or an anonymous browser ID on the website. The project creates these variations deliberately so that identity matching can be tested against known relationships instead of a perfectly clean dataset.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    O[Olist dataset] -->|download and load| P[(PostgreSQL)]
+    O[Olist public dataset] -->|Python load| P[(PostgreSQL 17)]
     P --> CM[Customer Master]
     CM --> SF[Salesforce Contacts]
-    CM --> SU[Support]
-    CM --> MK[Marketing]
+    CM --> SU[Support Tickets]
+    CM --> MK[Marketing Interactions]
     CM --> WE[Web Events]
-    P --> EX[CSV exports]
-    SF --> CRM[Salesforce CRM]
-    CRM --> DC[Salesforce Data Cloud]
-    EX --> DC
+    SF --> E[CSV exports]
+    SU --> E
+    MK --> E
+    WE --> E
+    P --> E
+    E -. manual ingestion .-> CRM[Salesforce CRM]
+    E -. manual ingestion .-> DC[Salesforce Data Cloud]
+    CRM -. data stream .-> DC
     DC --> IR[Identity Resolution]
     IR --> UP[Unified Profiles]
 ```
 
-PostgreSQL provides the local preparation and validation environment. The generators use hashes and deterministic rules, so the same input produces the same identities, quality profiles, and interactions. The `customer_unique_id` is retained internally as evaluation ground truth, while operational exports omit this direct link from several sources. This makes it possible to test resolution through attributes such as email address, phone number, name, and anonymous identifiers.
+Python downloads and loads Olist data, then generates deterministic customer identities and cross-channel activity in PostgreSQL. SQL scripts create the source schemas and validate record quality. Separate CSV exports are produced for CRM import, Data Cloud ingestion, and offline evaluation.
 
-Salesforce Data Cloud is not run by this repository's Docker Compose stack. Data streams, Data Lake Objects, Data Model Objects, match rules, and reconciliation rules are configured in the Salesforce/Data Cloud organization used for the demonstration.
+Salesforce CRM and Data Cloud are outside the local Docker environment. Their ingestion mappings and Identity Resolution rules must be configured in a Salesforce organization.
+
+## Identity Resolution
+
+![Customer 360 MVP](img/customer-360-mvp.png)
+*Salesforce Data Cloud Identity Resolution consolidating Customer Master and Salesforce CRM profiles using normalized email and phone matching.*
+
+## Technology stack
+
+| Technology | Role |
+| --- | --- |
+| Python | Dataset download, ingestion, deterministic data generation, and export |
+| PostgreSQL 17 | Local storage, source separation, joins, and validation |
+| Docker Compose | Reproducible local database environment |
+| SQL | Schema initialization and data-quality checks |
+| Kaggle Hub / Olist | Public transactional source |
+| Salesforce CRM | Target for the generated contact import sample |
+| Salesforce Data Cloud | Target platform for ingestion, data-model mapping, and Identity Resolution |
 
 ## Data sources
 
-| Source | Local model | Purpose |
-| --- | --- | --- |
-| Olist | `olist.*` | E-commerce customers, orders, items, payments, reviews, products, sellers, and geolocation |
-| Customer Master | `crm.customer_master` | Reference identity, synthetically enriched from Olist customers |
-| Salesforce Contacts | `crm.salesforce_contacts` | CRM contact representation with controlled quality variations |
-| Support | `support.tickets` | Simulated service history and requester identity signals |
-| Marketing | `marketing.interactions` | Simulated email campaign and engagement events |
-| Web Events | `web.events` | Anonymous and known digital journeys grouped by browser and session |
+| Source | Local model | What it represents | Identity signals |
+| --- | --- | --- | --- |
+| Olist | `olist.*` | Customers, orders, items, payments, reviews, products, sellers, and geolocation | Olist customer identifiers |
+| Customer Master | `crm.customer_master` | One synthetic reference identity per Olist customer | Name, email, E.164 phone, birth date |
+| Salesforce Contacts | `crm.salesforce_contacts` | CRM-style contacts with lead source and status | Salesforce-like ID, name, email, phone |
+| Support | `support.tickets` | Tickets across email, chat, phone, and WhatsApp | Requester name, email, phone |
+| Marketing | `marketing.interactions` | Sends, opens, clicks, conversions, and unsubscribes | Email and campaign activity |
+| Web Events | `web.events` | Anonymous-to-known browsing and purchase sessions | Anonymous ID, session ID, email |
 
-### Customer Master
+The generated sources contain controlled quality profiles: clean records, uppercase email addresses, formatted phone numbers, abbreviated names, small name typos, and missing email or phone values. Web sessions begin anonymously and may become known at checkout or purchase.
 
-This is the lab's internal reference: one record for each Olist `customer_unique_id`, enriched with a name, email address, E.164 phone number, and date of birth. These attributes are synthetic and generated deterministically. The master is the basis for creating the remaining sources and provides the ground truth used to measure unification quality.
+## Identity Resolution design
 
-### Salesforce Contacts
+The local pipeline keeps `customer_unique_id` as ground truth so expected cross-source relationships are known. Operational exports intentionally omit this direct identifier from several sources. The intended Data Cloud flow is:
 
-This source simulates contacts maintained in Salesforce CRM. Each contact receives a Salesforce Contact-like ID, a lead source, and a status. To create a realistic Identity Resolution scenario, some records contain uppercase email addresses, differently formatted phone numbers, abbreviated names, small typos, or missing fields.
+1. Ingest CRM and CSV sources as separate data streams.
+2. Map source fields to the relevant Data Model Objects.
+3. Normalize identifiers such as email addresses and phone numbers.
+4. Apply exact or fuzzy match rules across email, phone, name, Salesforce Contact ID, and web identifiers.
+5. Apply reconciliation rules to select preferred attributes for a unified profile.
+6. Compare resolved relationships with `identity_ground_truth.csv`.
 
-The project also exports a balanced sample of 1,000 contacts for use with the Salesforce Data Import Wizard. The corresponding ground-truth file is for evaluation only and must not be imported into the CRM.
+Steps 1–5 are Data Cloud configuration work and are not automated in this repository. The ground-truth export exists, but precision, recall, and match-rate have not yet been measured.
 
-### Support
+## Current results
 
-This source represents support tickets received through email, chat, phone, or WhatsApp. Records include category, priority, status, sentiment, creation and resolution timestamps, and requester attributes. Approximately 30% of customers receive one to three tickets, also with controlled variations in identity data.
+A representative local run produced:
 
-### Marketing
+| Output | Records |
+| --- | ---: |
+| Customer Master | 96,096 |
+| Salesforce Contacts | 96,096 |
+| Salesforce CRM import sample | 1,000 |
+| Support Tickets | 58,020 |
+| Marketing Interactions | 112,914 |
+| Web Events | 177,982 |
+| Orders | 99,441 |
+| Products | 32,951 |
 
-This source represents campaign interactions such as sends, opens, clicks, conversions, and unsubscribes. About 70% of customers participate in a campaign. The email address may be clean, uppercase, or missing, creating another source for matching and unification.
+These results confirm that the local pipeline can build repeatable, multi-source test data and export known identity relationships. They are pipeline output counts, not proof of completed Data Cloud unification.
 
-### Web Events
+## Pipeline flow
 
-This source represents sessions containing `page_view`, `product_view`, `add_to_cart`, `checkout_started`, and `purchase` events. Browsing begins with an `anonymous_id` and `session_id`; at identification points such as checkout or purchase, events may start carrying an email address and a known reference. This sequence demonstrates how Data Cloud can link anonymous activity to an identified profile.
-
-## Ingestion flow
-
-1. `download_olist.py` downloads the public dataset through Kaggle Hub into `data/raw/olist`.
-2. PostgreSQL initializes the schemas and tables defined under `sql/schema`.
-3. `load_olist.py` loads the raw CSV files into the `olist.*` tables.
-4. The generators create Customer Master, Salesforce Contacts, Support, Marketing, and Web Events, in that order.
-5. Queries under `sql/analytics` validate integrity, coverage, and quality distributions.
-6. `export_salesforce_crm_sample.py` prepares the sample for Salesforce CRM import.
-7. `export_data360.py` produces operational CSV files and evaluation ground truth.
-8. Salesforce CRM and the exported CSV files feed Salesforce Data Cloud, where Identity Resolution matches records and creates unified profiles.
+1. Download Olist CSV files with `download_olist.py`.
+2. Initialize PostgreSQL schemas and load the raw tables with `load_olist.py`.
+3. Generate Customer Master, Salesforce Contacts, Support, Marketing, and Web Events.
+4. Run SQL checks for integrity, coverage, event consistency, and quality-profile distributions.
+5. Export a 1,000-contact CRM sample, Data Cloud source files, and identity ground truth.
+6. Manually import and configure the relevant sources in Salesforce CRM and Data Cloud.
 
 ## Repository structure
 
@@ -177,29 +220,6 @@ docker compose down
 ```
 
 This preserves the named PostgreSQL volume. Removing the volume also removes the local database and is intentionally not part of the standard workflow.
-
-## Salesforce Data Cloud and Identity Resolution
-
-After the data streams are ingested and mapped to the appropriate data model, Identity Resolution can use normalized identifiers and fuzzy or exact match rules to associate records from CRM, support, marketing, commerce and web activity. Reconciliation rules then choose which source contributes the preferred value to the unified profile.
-
-The `customer_unique_id` and the files under `data/processed/evaluation` are ground truth for assessing the MVP. They should not be used as a shortcut in production-like matching rules. The intended exercise is to resolve identities from source-visible fields such as e-mail, phone, name, Salesforce Contact ID and anonymous web identifiers.
-
-## MVP Results
-
-A representative local run currently produces:
-
-| Output | Records |
-| --- | ---: |
-| Customer Master | 96,096 |
-| Salesforce Contacts | 96,096 |
-| Salesforce CRM import sample | 1,000 |
-| Support Tickets | 58,020 |
-| Marketing Interactions | 112,914 |
-| Web Events | 177,982 |
-| Orders | 99,441 |
-| Products | 32,951 |
-
-The MVP demonstrates a reproducible multi-source dataset with known identity relationships, deliberate data-quality variations and exports suitable for testing Data Cloud ingestion and Identity Resolution. Counts may change if the upstream dataset or generation rules are changed.
 
 ## Data and Git hygiene
 

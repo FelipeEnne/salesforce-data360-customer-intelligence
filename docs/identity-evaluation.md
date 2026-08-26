@@ -8,7 +8,7 @@ Aggregated Data Cloud counts such as source profiles, unified profiles, and cons
 
 ## Evaluation scope
 
-The current Data Cloud MVP contains Customer Master and a 1,000-contact Salesforce CRM sample. Each imported Contact has an `External_Customer_Id__c` value that identifies its expected Customer Master record. This field is ground truth only and is not used by the Identity Resolution ruleset.
+The profile sources participating in Identity Resolution are Customer Master and a 1,000-contact Salesforce CRM sample. Orders, Support Tickets, and Marketing Interactions are implemented as engagement sources but are outside this pairwise identity evaluation. Each imported Contact has an `External_Customer_Id__c` value that identifies its expected Customer Master record. This field is ground truth only and is not used by the Identity Resolution ruleset.
 
 The evaluator measures Customer Master–Salesforce Contact pairs:
 

@@ -244,17 +244,17 @@ Files under `data/processed` are generated locally and ignored by Git.
 | `data360/customer_master.csv` | One row per master customer | `master_customer_id`, name, email, phone, birth date | Loaded |
 | `salesforce/contacts_import.csv` | One row per selected CRM Contact | `External_Customer_Id__c`, name, email, phone | Imported into CRM; native stream loaded |
 | `data360/salesforce_contacts.csv` | One row per generated CRM-style contact | Salesforce-like ID, name, email, phone | Not used by current CRM Data Stream |
-| `data360/support_tickets.csv` | One row per ticket | Requester identity and ticket attributes | Not loaded |
-| `data360/marketing_interactions.csv` | One row per campaign event | Email, campaign, event type and time | Not loaded |
+| `data360/support_tickets.csv` | One row per ticket | `master_customer_id`, requester identity and ticket attributes | Loaded and mapped to Case |
+| `data360/marketing_interactions.csv` | One row per campaign event | `master_customer_id`, email, campaign, event type and time | Loaded and mapped to Email Engagement |
 | `data360/web_events.csv` | One row per web event | Anonymous/session IDs, email and event attributes | Not loaded |
-| `data360/orders.csv` | One row per order | Master ID, status, timestamps and aggregated values | Not loaded |
+| `data360/orders.csv` | One row per order | `master_customer_id`, status, timestamps and aggregated values | Loaded and mapped to Sales Order |
 | `data360/products.csv` | One row per product | Category translation and dimensions | Not loaded |
 | `evaluation/identity_ground_truth.csv` | One row per master customer | Expected cross-source example identifiers | Evaluation only |
 | `salesforce/contacts_ground_truth.csv` | One row per imported Contact | Expected master ID and quality profile | Evaluation only |
 
 ## Data Cloud field mappings
 
-The field-level mappings for the implemented Customer Master and Salesforce CRM sources are documented separately in [Data Cloud Field Mappings](field-mapping.md).
+The field-level mappings for the implemented Customer Master, Salesforce CRM, Orders, Support Tickets, and Marketing Interactions sources are documented separately in [Data Cloud Field Mappings](field-mapping.md).
 
 ## Related documentation
 

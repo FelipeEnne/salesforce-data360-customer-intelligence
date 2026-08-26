@@ -1,8 +1,8 @@
 # Identity Resolution
 
-## Ruleset configuration
+## Implemented ruleset
 
-The ruleset has been configured and executed successfully in Salesforce Data Cloud Developer Edition.
+The ruleset is configured and has executed successfully in Salesforce Data Cloud Developer Edition.
 
 | Setting | Value |
 | --- | --- |
@@ -12,39 +12,35 @@ The ruleset has been configured and executed successfully in Salesforce Data Clo
 | Data Space | `default` |
 | Execution status | Completed successfully |
 
-## Match rules
+![Identity Resolution summary](images/identity-resolution-summary.png)
 
-The ruleset uses two independent exact-normalized match rules joined by `OR`. A profile can therefore match through either normalized email or normalized E.164 phone.
+## Matching
 
-```text
-Exact Normalized Email
-OR
-Exact Normalized E.164 Phone
-```
+Two independent rules are joined by `OR`, so either normalized contact point can match a profile:
 
-| Contact Point | Field | Match method |
+| Contact Point DMO | Field | Method |
 | --- | --- | --- |
 | Contact Point Email | Email Address | Exact Normalized |
 | Contact Point Phone | Formatted E164 Phone Number | Exact Normalized |
 
-Name is intentionally excluded because the synthetic source contains controlled name variations. `External_Customer_Id__c` is also excluded because it is ground truth for evaluation rather than an operational matching attribute.
+Name is excluded because the dataset contains intentional name variations. `External_Customer_Id__c` and `customer_unique_id` are also excluded: they are ground truth for later evaluation, not operational matching attributes.
 
-## Reconciliation rule
+Orders, Support Tickets, and Marketing Interactions are engagement data. Their `master_customer_id` values relate their DMOs to Individual and do not participate in matching.
 
-The Individual Id reconciliation rule uses Source Priority.
+## Reconciliation
+
+Individual Id uses Source Priority:
 
 | Priority | Source |
 | ---: | --- |
 | 1 | Customer Master |
 | 2 | `Contact_Home` / Salesforce CRM |
 
-`Ignore empty values` is enabled, preventing an empty value from replacing an available value from the prioritized sources.
+`Ignore empty values` is enabled.
 
-## Current execution results
+## Observed execution results
 
-The Data Cloud execution currently reports:
-
-| Metric | Result |
+| Data Cloud metric | Observed result |
 | --- | ---: |
 | Source profiles | Approximately 97.12K |
 | Unified profiles | Approximately 96.17K |
@@ -52,19 +48,23 @@ The Data Cloud execution currently reports:
 | Unified known profiles | Approximately 96.17K |
 | Anonymous unified profiles | 0 |
 
-The current consolidation is consistent with the implemented scope: 96,096 Customer Master records and a 1,000-contact Salesforce CRM sample are the only profile sources loaded into Data Cloud. Records can consolidate when normalized email or normalized phone matches across those sources.
+These totals show that the ruleset executed and produced unified profiles. They are not precision, recall, F1, false-positive-rate, or false-negative-rate measurements.
 
-These results confirm that the ruleset executed and produced unified profiles. They do not establish matching accuracy.
+## Profile Explorer validation
 
-## Evaluation boundary
+One synthetic customer was traced from its local source values to its unified profile. Profile Explorer showed the same values: 1 Lifetime Order, 43.62 Lifetime Value, 1 Total Ticket, and 1 Total Interaction.
 
-Precision, recall, false-positive counts, and false-negative counts have not yet been calculated. The [quantitative evaluation workflow](identity-evaluation.md) is implemented and awaits a detailed export of Unified Profile memberships from Data Cloud.
+This validates the demonstrated profile-to-engagement relationship and Calculated Insight output for that record. It does not measure Identity Resolution accuracy across the population.
 
-The ruleset does not use `External_Customer_Id__c` for matching. This preserves that identifier for an independent comparison between expected and resolved relationships.
+[View the measured result and Profile Explorer screenshots](results.md#profile-explorer-end-to-end-validation).
+
+## Quantitative evaluation boundary
+
+The repository includes an [evaluation workflow](identity-evaluation.md), but the detailed Unified Profile membership export required to calculate accuracy metrics has not yet been evaluated. No precision, recall, F1, false-positive rate, or false-negative rate is claimed.
 
 ## Related documentation
 
-- [Data Cloud setup](data-cloud-setup.md)
+- [Data Cloud implementation](data-cloud-setup.md)
 - [Field mappings](field-mapping.md)
-- [Quantitative evaluation](identity-evaluation.md)
+- [Measured results](results.md)
 - [Back to README](../README.md)

@@ -1,67 +1,68 @@
-# Architecture and Identity Resolution
+# Architecture
 
-## Components
+## Implemented architecture
 
 ```mermaid
 flowchart LR
-    O[Olist public dataset] -->|download and load| P[(PostgreSQL 17)]
-    P --> CM[Customer Master]
-    CM --> SF[Salesforce Contacts]
-    CM --> SU[Support Tickets]
-    CM --> MK[Marketing Interactions]
-    CM --> WE[Web Events]
-    SF --> E[CSV exports]
-    SU --> E
-    MK --> E
-    WE --> E
-    P --> E
-    E -. manual ingestion .-> CRM[Salesforce CRM]
-    E -. manual ingestion .-> DC[Salesforce Data Cloud]
-    CRM -. data stream .-> DC
-    DC --> IR[Identity Resolution]
-    IR --> UP[Unified Profiles]
+    O[Olist public dataset] --> PY[Python pipeline]
+    PY --> PG[(PostgreSQL 17)]
+    PG --> CM[Customer Master CSV]
+    PG --> SFCSV[CRM Contact import]
+    PG --> ORD[Orders CSV]
+    PG --> SUP[Support Tickets CSV]
+    PG --> MKT[Marketing Interactions CSV]
+    SFCSV --> CRM[Salesforce CRM]
+    CRM --> CH[Contact_Home]
+    CM --> PROFILE[Individual and Contact Points]
+    CH --> PROFILE
+    PROFILE --> IR[Identity Resolution]
+    IR --> UI[Unified Individual]
+    ORD --> SO[Sales Order]
+    SUP --> CASE[Case]
+    MKT --> EMAIL[Email Engagement]
+    UI --> CI[Calculated Insights]
+    SO --> CI
+    CASE --> CI
+    EMAIL --> CI
+    CI --> SEG[Segments]
+    UI --> PE[Profile Explorer validation]
 ```
 
-PostgreSQL provides the local preparation and validation environment. Python scripts download and load the public source, generate deterministic identities and interactions, and export source-specific CSV files. SQL scripts initialize the database and validate integrity, event consistency, coverage, and quality distributions.
+PostgreSQL is the local preparation and validation layer. Python downloads and loads the public Olist source, generates deterministic synthetic identities and engagement data, validates data quality, and exports source-specific CSV files. Salesforce CRM and Salesforce Data Cloud run in a Salesforce Developer Edition organization outside Docker.
 
-Salesforce CRM and Salesforce Data Cloud are outside the local Docker environment. CRM import, data streams, Data Lake Objects, Data Model Objects, match rules, and reconciliation rules must be configured in a Salesforce organization.
+![Implemented Data Streams](images/data-streams-overview.png)
 
-## Pipeline flow
+The project imported 1,000 Contacts. The screenshot shows the organization-level `Contact_Home` record total visible at capture time, not the project import count.
 
-1. Download the Olist CSV files through Kaggle Hub.
-2. Initialize PostgreSQL schemas and load the raw tables.
-3. Generate the Customer Master from unique Olist customers.
-4. Generate Salesforce Contacts, Support, Marketing, and Web Events.
-5. Run SQL validation queries.
-6. Export a Salesforce CRM sample, Data Cloud source files, and evaluation ground truth.
-7. Manually ingest and map the relevant sources in Salesforce CRM and Data Cloud.
+## Implemented flow
 
-## Identity Resolution design
+1. Load the Olist dataset into PostgreSQL.
+2. Generate the Customer Master, Salesforce Contacts, Support Tickets, Marketing Interactions, and Web Events locally.
+3. Validate the local model and export the Salesforce and Data Cloud files.
+4. Import 1,000 Contacts into Salesforce CRM.
+5. Ingest Customer Master, CRM Contacts, Orders, Support Tickets, and Marketing Interactions into Data Cloud.
+6. Map profile data to Individual and Contact Point DMOs and engagement data to Sales Order, Case, and Email Engagement.
+7. Resolve Customer Master and CRM identities using normalized email or normalized phone.
+8. Calculate order, support, and marketing metrics, then build customer segments.
+9. Validate one synthetic customer from the local source through Profile Explorer.
 
-The Customer Master supplies a deterministic identity for each Olist customer. Downstream sources deliberately introduce variations such as:
+## Identity and engagement model
 
-- uppercase email addresses;
-- differently formatted phone numbers;
-- abbreviated names;
-- small name typos;
-- missing email addresses or phone numbers;
-- anonymous web sessions that become known during checkout or purchase.
+Only Customer Master and Salesforce CRM Contacts participate as profile sources in Identity Resolution. The `Customer 360 MVP` ruleset uses Exact Normalized Email **or** Exact Normalized Phone. It does not use `customer_unique_id` or `External_Customer_Id__c` as matching criteria.
 
-The local pipeline retains `customer_unique_id` as ground truth, while several operational exports omit that direct relationship. This supports an evaluation flow in which Data Cloud must resolve records using source-visible identity signals.
+Orders, Support Tickets, and Marketing Interactions are engagement sources related to Individual through `master_customer_id`. This key provides the relationship to the profile; it is not an Identity Resolution matching rule.
 
-The intended Data Cloud process is:
+Calculated Insights aggregate the related engagement records into Lifetime Orders, Lifetime Value, Total Tickets, and Total Interactions. The implemented segments use Lifetime Value and Total Tickets.
 
-1. Ingest CRM and CSV sources as separate data streams.
-2. Map source fields to the relevant Data Model Objects.
-3. Normalize email addresses, phone numbers, and other identifiers.
-4. Apply exact or fuzzy match rules appropriate to each identity field.
-5. Use reconciliation rules to select preferred unified-profile attributes.
-6. Compare resolved relationships with `data/processed/evaluation/identity_ground_truth.csv`.
+## MVP boundary
 
-Steps 1–5 are not automated by this repository. The ground-truth export exists, but Identity Resolution precision, recall, and match rate have not yet been measured.
+Products and Web Events exist in the local pipeline but are explicitly outside the Data Cloud MVP. Agentforce, MCP, custom APIs, streaming ingestion, and production deployment are future improvements.
 
-## Export boundaries
+## Export boundary
 
-Operational exports under `data/processed/data360` are intended as Data Cloud source files. The files under `data/processed/evaluation` contain internal ground truth and must not be ingested as a matching shortcut. The Salesforce ground-truth sample is also for offline evaluation only.
+Operational exports under `data/processed/data360` are Data Cloud source files. Files under `data/processed/evaluation` contain internal ground truth and must not be ingested as matching shortcuts.
 
-[Back to README](../README.md)
+- [Data Cloud implementation](data-cloud-setup.md)
+- [Field mappings](field-mapping.md)
+- [Measured results](results.md)
+- [Back to README](../README.md)

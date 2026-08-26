@@ -64,11 +64,10 @@ awk ... .env
 
 ## Validation Rules
 
-Whenever Python source code or tests are created, modified, or deleted, run both commands before considering the work complete:
+Whenever Python source code, tests, validation tooling, or CI configuration are created, modified, or deleted, run the complete local CI-equivalent suite before considering the work complete:
 
 ```bash
-make lint
-make test
+make check
 ```
 
-Do not skip, suppress, or ignore failures. Fix lint and test errors before completing the task. Documentation-only changes do not require these commands unless they also modify validation tooling or CI configuration.
+`make check` includes lint and the full test suite. Do not skip, suppress, or ignore failures. Fix validation errors before completing the task. Documentation-only changes do not require this command unless they also modify validation tooling or CI configuration.

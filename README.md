@@ -16,7 +16,7 @@ The project ingests public Olist commerce data, creates deterministic synthetic 
 - Three successfully executed Calculated Insights.
 - Two active customer segments.
 - End-to-end validation in Profile Explorer.
-- Ruff, 13 unit tests, and GitHub Actions CI.
+- Ruff, automated contract and hygiene tests, and GitHub Actions CI.
 
 ## Architecture
 

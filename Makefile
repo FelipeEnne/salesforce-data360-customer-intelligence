@@ -6,14 +6,13 @@ SYSTEM_PYTHON ?= python3
 .DEFAULT_GOAL := help
 .NOTPARALLEL: pipeline
 
-.PHONY: help setup database status download load generate validate export lint test pipeline stop
+.PHONY: help setup database status download load generate validate export lint test test-exports check-docs check-hygiene check pipeline stop
 
 help: ## Show the available commands
 	@awk 'BEGIN {FS = ":.*## "; print "Available commands:"} /^[a-zA-Z_-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 setup: .venv/bin/python ## Create the virtual environment and install dependencies
-	$(PYTHON) -m pip install --upgrade pip
-	$(PYTHON) -m pip install -r requirements-dev.txt
+	$(PYTHON) -m pip install --require-hashes -r requirements-dev.txt
 
 .venv/bin/python:
 	$(SYSTEM_PYTHON) -m venv .venv
@@ -54,6 +53,17 @@ lint: ## Run Ruff against source code and tests
 
 test: ## Run the unit test suite without loading the local .env
 	PYTHON_DOTENV_DISABLED=1 $(PYTHON) -m unittest discover -s tests -v
+
+test-exports: ## Run Data 360 and Salesforce export schema contract tests
+	PYTHON_DOTENV_DISABLED=1 $(PYTHON) -m unittest tests.test_export_schemas -v
+
+check-docs: ## Validate local Markdown links and image targets
+	PYTHON_DOTENV_DISABLED=1 $(PYTHON) -m unittest tests.test_documentation_links -v
+
+check-hygiene: ## Check tracked filenames, generated CSVs, and file sizes
+	PYTHON_DOTENV_DISABLED=1 $(PYTHON) -m unittest tests.test_repository_hygiene -v
+
+check: lint test ## Run the same validation suite used by CI
 
 pipeline: ## Run the complete local pipeline
 	$(MAKE) database

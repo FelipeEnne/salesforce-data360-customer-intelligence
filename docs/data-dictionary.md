@@ -252,6 +252,87 @@ Files under `data/processed` are generated locally and ignored by Git.
 | `evaluation/identity_ground_truth.csv` | One row per master customer | Expected cross-source example identifiers | Evaluation only |
 | `salesforce/contacts_ground_truth.csv` | One row per imported Contact | Expected master ID and quality profile | Evaluation only |
 
+### Implemented Data Cloud export contracts
+
+Column order is part of the export contract and is validated after each CSV is written.
+
+#### `data360/customer_master.csv`
+
+| Position | Column | Local lineage | Purpose |
+| ---: | --- | --- | --- |
+| 1 | `master_customer_id` | `crm.customer_master.customer_unique_id` | Data Cloud profile primary key |
+| 2 | `first_name` | `crm.customer_master.first_name` | Profile attribute |
+| 3 | `last_name` | `crm.customer_master.last_name` | Profile attribute |
+| 4 | `full_name` | `crm.customer_master.full_name` | Profile attribute |
+| 5 | `email` | `crm.customer_master.email` | Contact Point Email |
+| 6 | `phone` | `crm.customer_master.phone_e164` | Contact Point Phone |
+| 7 | `birth_date` | `crm.customer_master.birth_date` | Profile attribute |
+| 8 | `source_system` | `crm.customer_master.source_system` | Source attribution |
+
+`master_customer_id` is an export alias for the local `customer_unique_id`; it is not a second physical column in `crm.customer_master`.
+
+#### `data360/orders.csv`
+
+| Position | Column | Local lineage | Purpose |
+| ---: | --- | --- | --- |
+| 1 | `order_id` | `olist.orders.order_id` | Sales Order Id |
+| 2 | `master_customer_id` | `olist.customers.customer_unique_id` | Sold To Customer relationship |
+| 3 | `order_status` | `olist.orders.order_status` | Sales Order Status |
+| 4 | `order_purchase_timestamp` | `olist.orders.order_purchase_timestamp` | Created Date |
+| 5 | `order_approved_at` | `olist.orders.order_approved_at` | Additional order timestamp |
+| 6 | `order_delivered_customer_date` | `olist.orders.order_delivered_customer_date` | Additional order timestamp |
+| 7 | `order_estimated_delivery_date` | `olist.orders.order_estimated_delivery_date` | Additional order timestamp |
+| 8 | `item_value` | Sum of `olist.order_items.price` | Order aggregate |
+| 9 | `freight_value` | Sum of `olist.order_items.freight_value` | Order aggregate |
+| 10 | `payment_value` | Sum of `olist.order_payments.payment_value` | Paid Amount |
+
+#### `data360/support_tickets.csv`
+
+| Position | Column | Local lineage | Purpose |
+| ---: | --- | --- | --- |
+| 1 | `ticket_id` | `support.tickets.ticket_id` | Case Id |
+| 2 | `master_customer_id` | Customer Master join on `customer_unique_id` | Individual relationship only |
+| 3 | `requester_name` | `support.tickets.requester_name` | Source attribute |
+| 4 | `requester_email` | `support.tickets.requester_email` | Source attribute |
+| 5 | `requester_phone` | `support.tickets.requester_phone` | Source attribute |
+| 6 | `category` | `support.tickets.category` | Case Category |
+| 7 | `priority` | `support.tickets.priority` | Case Priority |
+| 8 | `status` | `support.tickets.status` | Case Status |
+| 9 | `channel` | `support.tickets.channel` | Case Creation Channel |
+| 10 | `sentiment` | `support.tickets.sentiment` | Source attribute |
+| 11 | `created_at` | `support.tickets.created_at` | Created Date |
+| 12 | `resolved_at` | `support.tickets.resolved_at` | Closed Date Time; nullable |
+| 13 | `resolution_hours` | `support.tickets.resolution_hours` | Derived duration |
+
+#### `data360/marketing_interactions.csv`
+
+| Position | Column | Local lineage | Purpose |
+| ---: | --- | --- | --- |
+| 1 | `interaction_id` | `marketing.interactions.interaction_id` | Email Engagement Id |
+| 2 | `master_customer_id` | Customer Master join on `customer_unique_id` | Individual relationship only |
+| 3 | `email` | `marketing.interactions.email` | Source attribute |
+| 4 | `campaign_name` | `marketing.interactions.campaign_name` | Email Name |
+| 5 | `event_type` | `marketing.interactions.event_type` | Engagement Channel Action |
+| 6 | `channel` | `marketing.interactions.channel` | Engagement Channel |
+| 7 | `event_at` | `marketing.interactions.event_at` | Engagement Date Time |
+
+The `master_customer_id` relationship fields in Orders, Support Tickets, and Marketing Interactions are foreign keys to Individual. They are not Identity Resolution matching criteria.
+
+### Salesforce CRM export contracts
+
+`salesforce/contacts_import.csv` uses this ordered schema: `External_Customer_Id__c`, `FirstName`, `LastName`, `Email`, `Phone`, `Lead_Source__c`, `Contact_Status__c`.
+
+`salesforce/contacts_ground_truth.csv` uses `customer_unique_id`, `quality_profile` and remains evaluation-only.
+
+### Local-only export contracts
+
+The existing local exports are also schema-validated even though they are outside the current Data Cloud MVP:
+
+- `salesforce_contacts.csv`: `salesforce_contact_id`, `first_name`, `last_name`, `full_name`, `email`, `phone`, `lead_source`, `contact_status`, `created_at`;
+- `web_events.csv`: `event_id`, `anonymous_id`, `session_id`, `email`, `event_type`, `product_id`, `page_path`, `device_type`, `event_at`, `event_properties`;
+- `products.csv`: `product_id`, `product_category_name`, `product_category_name_english`, `product_weight_g`, `product_length_cm`, `product_height_cm`, `product_width_cm`;
+- `evaluation/identity_ground_truth.csv`: `customer_unique_id`, `salesforce_contact_id`, `example_ticket_id`, `example_marketing_interaction_id`, `anonymous_id`.
+
 ## Data Cloud field mappings
 
 The field-level mappings for the implemented Customer Master, Salesforce CRM, Orders, Support Tickets, and Marketing Interactions sources are documented separately in [Data Cloud Field Mappings](field-mapping.md).

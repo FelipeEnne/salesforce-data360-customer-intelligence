@@ -15,10 +15,10 @@ Run `make help` to list the available targets. The sections below show the equiv
 ## Prerequisites
 
 - Docker with Docker Compose
-- Python 3.10 or newer
+- Python 3.12
 - Access to the public Olist dataset through Kaggle Hub
 
-Direct Python dependencies are pinned in `requirements.txt`. Development tools are pinned separately in `requirements-dev.txt`. `pandas` is intentionally not included because the current pipeline does not import it.
+Direct dependency choices are maintained in `requirements.in` and `requirements-dev.in`. Their corresponding `requirements.txt` files lock the complete transitive dependency graph with hashes. `pandas` is intentionally not included because the current pipeline does not import it.
 
 Kaggle Hub may require Kaggle credentials. Keep Kaggle and Salesforce credentials, tokens, local `.env` files, generated data, and database dumps out of Git.
 
@@ -27,8 +27,7 @@ Kaggle Hub may require Kaggle credentials. Keep Kaggle and Salesforce credential
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pip install --require-hashes -r requirements.txt
 cp .env.example .env
 ```
 
@@ -137,7 +136,7 @@ Run the Ruff linter before the tests:
 make lint
 ```
 
-The unit tests cover deterministic identity generation, source-specific transformations, web identity states, and Identity Resolution evaluation logic. They do not require PostgreSQL or Salesforce.
+The unit tests cover deterministic identity generation, source-specific transformations, export schema contracts, documentation links, repository hygiene, web identity states, and Identity Resolution evaluation logic. They do not require PostgreSQL or Salesforce.
 
 ```bash
 PYTHON_DOTENV_DISABLED=1 python -m unittest discover -s tests -v
@@ -148,6 +147,42 @@ Equivalent Make target:
 ```bash
 make test
 ```
+
+Run the complete local CI-equivalent suite with:
+
+```bash
+make check
+```
+
+Focused checks are also available:
+
+```bash
+make test-exports
+make check-docs
+make check-hygiene
+```
+
+CI installs from the hashed development lock and invokes the same `make check` target.
+
+### Updating dependencies
+
+Change intentional requirements in the `.in` files, then regenerate both locks with Python 3.12 and the pinned compiler version:
+
+```bash
+python -m pip install pip-tools==7.5.2
+pip-compile --generate-hashes --resolver=backtracking --output-file requirements.txt requirements.in
+pip-compile --generate-hashes --resolver=backtracking --output-file requirements-dev.txt requirements-dev.in
+```
+
+Review dependency changes and rerun `make setup` and `make check` before publishing the updated locks.
+
+## Reproducibility boundaries
+
+- Python is standardized on 3.12 through `.python-version`, Ruff, CI, and this guide.
+- Python packages are fully pinned with artifact hashes.
+- PostgreSQL 17 is pinned to an immutable container-image digest.
+- Generators are deterministic for the same raw Olist input.
+- The Kaggle dataset slug is fixed, but the remote artifact is controlled by Kaggle. Preserve or checksum the downloaded files when an exact source snapshot is required.
 
 ## 8. Stop PostgreSQL
 

@@ -6,6 +6,8 @@ Names, email addresses, phone numbers, and other enriched identity attributes ge
 
 The public Brazilian E-Commerce dataset provides customers, orders, order items, payments, reviews, products, sellers, geolocation, and product-category translations. It is downloaded locally through Kaggle Hub and loaded into the `olist` PostgreSQL schema.
 
+The configured Kaggle dataset slug is `olistbr/brazilian-ecommerce`. The repository pins the Kaggle Hub client, but Kaggle controls the artifact returned for that slug. For strict reruns, retain the downloaded raw files locally and record their checksums before replacing them. Raw source files remain outside Git because of their size and third-party dataset terms.
+
 ## Customer Master
 
 `crm.customer_master` contains one record per Olist `customer_unique_id`, enriched with a synthetic name, email address, E.164 phone number, and date of birth. Generation is deterministic: the same input customer ID produces the same identity attributes.

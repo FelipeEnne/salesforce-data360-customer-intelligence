@@ -20,6 +20,21 @@ OUTPUT_DIR = (
 IMPORT_FILE = OUTPUT_DIR / "contacts_import.csv"
 GROUND_TRUTH_FILE = OUTPUT_DIR / "contacts_ground_truth.csv"
 
+IMPORT_SCHEMA = (
+    "External_Customer_Id__c",
+    "FirstName",
+    "LastName",
+    "Email",
+    "Phone",
+    "Lead_Source__c",
+    "Contact_Status__c",
+)
+
+GROUND_TRUTH_SCHEMA = (
+    "customer_unique_id",
+    "quality_profile",
+)
+
 
 QUOTAS = {
     "clean": 600,
@@ -96,17 +111,7 @@ def write_import_file(contacts):
     ) as file:
         writer = csv.writer(file)
 
-        writer.writerow(
-            [
-                "External_Customer_Id__c",
-                "FirstName",
-                "LastName",
-                "Email",
-                "Phone",
-                "Lead_Source__c",
-                "Contact_Status__c",
-            ]
-        )
+        writer.writerow(IMPORT_SCHEMA)
 
         for row in contacts:
             (
@@ -146,12 +151,7 @@ def write_ground_truth_file(contacts):
     ) as file:
         writer = csv.writer(file)
 
-        writer.writerow(
-            [
-                "customer_unique_id",
-                "quality_profile",
-            ]
-        )
+        writer.writerow(GROUND_TRUTH_SCHEMA)
 
         for row in contacts:
             writer.writerow(

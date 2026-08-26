@@ -1,0 +1,2 @@
+-r requirements.in
+ruff==0.16.3
